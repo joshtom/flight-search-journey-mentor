@@ -18,7 +18,8 @@ export const uiClasses = {
   hero: {
     base: 'flex flex-col items-center justify-center gap-3 pt-6 sm:pt-10',
     // eyebrow: 'text-xs font-semibold uppercase tracking-[0.18em] text-stone-500',
-    title: 'max-w-3xl text-3xl font-semibold tracking-normal text-stone-950 sm:text-5xl text-center',
+    title:
+      'max-w-3xl text-3xl font-semibold tracking-normal text-stone-950 sm:text-5xl text-center',
     subtitle: 'max-w-2xl text-base leading-7 text-stone-600 sm:text-lg text-center',
   },
   card: {
@@ -29,19 +30,19 @@ export const uiClasses = {
   },
   button: {
     primary: [
-      'inline-flex min-h-12 items-center justify-center rounded-full bg-stone-950 px-6 text-sm font-semibold text-white shadow-sm',
+      'inline-flex min-h-12 cursor-pointer items-center justify-center rounded-full bg-stone-950 px-6 text-sm font-semibold text-white shadow-sm',
       'hover:bg-stone-800 active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-stone-300',
       focusRing,
       interactiveMotion,
     ].join(' '),
     secondary: [
-      'inline-flex min-h-11 items-center justify-center rounded-full border border-stone-300 bg-white px-5 text-sm font-semibold text-stone-800',
+      'inline-flex min-h-11 cursor-pointer items-center justify-center rounded-full border border-stone-300 bg-white px-5 text-sm font-semibold text-stone-800',
       'hover:border-stone-400 hover:bg-stone-50 active:scale-[0.99] disabled:cursor-not-allowed disabled:text-stone-400',
       focusRing,
       interactiveMotion,
     ].join(' '),
     ghost: [
-      'inline-flex min-h-10 items-center justify-center rounded-full px-4 text-sm font-medium text-stone-600',
+      'inline-flex min-h-10 cursor-pointer items-center justify-center rounded-full px-4 text-sm font-medium text-stone-600',
       'hover:bg-stone-100 hover:text-stone-950 active:scale-[0.99]',
       focusRing,
       interactiveMotion,
@@ -56,13 +57,26 @@ export const uiClasses = {
       focusRing,
       interactiveMotion,
     ].join(' '),
+    invalidField: [
+      'min-h-12 w-full rounded-2xl border border-rose-200 bg-rose-50/70 px-4 text-sm font-medium text-stone-950 placeholder:text-rose-300',
+      'hover:border-rose-300 disabled:cursor-not-allowed disabled:text-stone-400',
+      focusRing,
+      interactiveMotion,
+    ].join(' '),
     select: [
       'min-h-12 w-full rounded-2xl border border-stone-200 bg-stone-50/80 px-4 text-sm font-medium text-stone-950',
       'hover:border-stone-300 hover:bg-white disabled:cursor-not-allowed disabled:text-stone-400',
       focusRing,
       interactiveMotion,
     ].join(' '),
+    invalidSelect: [
+      'min-h-12 w-full rounded-2xl border border-rose-200 bg-rose-50/70 px-4 text-sm font-medium text-stone-950',
+      'hover:border-rose-300 disabled:cursor-not-allowed disabled:text-stone-400',
+      focusRing,
+      interactiveMotion,
+    ].join(' '),
     hint: 'text-xs leading-5 text-stone-500',
+    error: 'text-xs font-medium leading-5 text-rose-700',
   },
   badge: {
     neutral:
@@ -76,7 +90,7 @@ export const uiClasses = {
   },
   resultCard: {
     base: [
-      'rounded-3xl border border-stone-200 bg-white p-5 shadow-sm',
+      'rounded-3xl border border-stone-200 bg-white p-4 shadow-sm',
       'hover:-translate-y-0.5 hover:border-stone-300 hover:shadow-[0_18px_48px_rgba(28,25,23,0.10)]',
       interactiveMotion,
     ].join(' '),
@@ -104,10 +118,13 @@ export const uiClasses = {
   modal: {
     backdrop: 'fixed inset-0 z-50 grid place-items-end bg-stone-950/30 p-3 sm:place-items-center',
     panel:
-      'w-full max-w-lg rounded-3xl border border-stone-200 bg-white p-5 shadow-[0_28px_90px_rgba(28,25,23,0.24)]',
+      'flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-[0_28px_90px_rgba(28,25,23,0.24)]',
+    widePanel:
+      'flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-[0_28px_90px_rgba(28,25,23,0.24)]',
     header: 'flex items-start justify-between gap-4',
     title: 'text-lg font-semibold text-stone-950',
-    body: 'mt-4 text-sm leading-6 text-stone-600',
+    body: 'overflow-y-auto p-4 text-sm leading-6 text-stone-600 sm:p-5',
+    footer: 'flex items-center justify-between gap-3 border-t border-stone-100 bg-white p-4 sm:p-5',
     closeButton: [
       'inline-flex size-10 items-center justify-center rounded-full text-stone-500',
       'hover:bg-stone-100 hover:text-stone-950',

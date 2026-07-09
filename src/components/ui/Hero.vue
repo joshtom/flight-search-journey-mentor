@@ -14,7 +14,7 @@ defineProps<{
 
 <template>
   <section :class="uiClasses.hero.base">
-    <p :class="uiClasses.hero.eyebrow">{{ eyebrow }}</p>
+    <p v-if="eyebrow" :class="uiClasses.page.eyebrow">{{ eyebrow }}</p>
     <h1 :class="uiClasses.hero.title">{{ title }}</h1>
     <p :class="uiClasses.hero.subtitle">{{ subtitle }}</p>
   </section>
