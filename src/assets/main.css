@@ -5,3 +5,20 @@
     'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
     'Courier New', monospace;
 }
+
+@layer base {
+  html {
+    @apply bg-stone-50;
+  }
+
+  body {
+    @apply font-mono text-stone-950 antialiased;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+}
