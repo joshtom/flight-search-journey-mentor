@@ -20,6 +20,7 @@ export function useCreateAnOfferRequest(token: string) {
     params?: TDuffelCreateOfferRequestQuery,
   ) {
     isPending.value = true
+    data.value = null
     error.value = null
     isSuccess.value = false
 

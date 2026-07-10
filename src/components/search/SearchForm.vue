@@ -5,14 +5,25 @@ import Button from '@/components/ui/Button.vue'
 import Card from '@/components/ui/Card.vue'
 import Input from '@/components/ui/Input.vue'
 import Select from '@/components/ui/Select.vue'
-import StateMessage from '@/components/ui/StateMessage.vue'
-import { useFlightSearch } from '@/composables/offerRequests/useFlightSearch'
 import { useSearchStore } from '@/stores/searchStore'
 import type { TCabinClass, TSearchFormErrors, TSearchFormValues } from '@/types/flight'
 
 defineOptions({
   name: 'SearchForm',
 })
+
+withDefaults(
+  defineProps<{
+    isSearching?: boolean
+  }>(),
+  {
+    isSearching: false,
+  },
+)
+
+const emit = defineEmits<{
+  search: [values: TSearchFormValues]
+}>()
 
 const cabinOptions: { label: string; value: TCabinClass | '' }[] = [
   { label: 'Select cabin', value: '' },
@@ -41,14 +52,6 @@ const emptySearchValues: TSearchFormValues = {
 }
 
 const searchStore = useSearchStore()
-const duffelAccessToken = import.meta.env.VITE_API_FLIGHT_SEARCH ?? ''
-const {
-  data: createdOfferRequest,
-  error: createOfferRequestError,
-  isPending,
-  isSuccess,
-  searchFlights,
-} = useFlightSearch(duffelAccessToken)
 
 const values = reactive<TSearchFormValues>({
   ...emptySearchValues,
@@ -123,7 +126,7 @@ const normalizeSearchValues = (): TSearchFormValues => ({
   passengers: Number(values.passengers),
 })
 
-const submitSearch = async () => {
+const submitSearch = () => {
   hasSubmitted.value = true
 
   if (hasErrors.value) {
@@ -134,16 +137,7 @@ const submitSearch = async () => {
 
   searchStore.saveSearch(searchValues)
   updateQueryParams()
-
-  if (!duffelAccessToken) {
-    return
-  }
-
-  try {
-    await searchFlights(searchValues)
-  } catch {
-    // The composable exposes the typed Duffel error for the template.
-  }
+  emit('search', searchValues)
 }
 </script>
 
@@ -206,29 +200,13 @@ const submitSearch = async () => {
         <div class="flex lg:pt-6">
           <Button
             class="w-full whitespace-nowrap lg:w-auto"
-            :disabled="isPending || (hasSubmitted && hasErrors)"
+            :disabled="isSearching || (hasSubmitted && hasErrors)"
             type="submit"
           >
-            {{ isPending ? 'Searching...' : 'Search flights' }}
+            {{ isSearching ? 'Searching...' : 'Search flights' }}
           </Button>
         </div>
       </div>
-
-      <StateMessage v-if="isPending" variant="loading">
-        Searching Duffel for matching flight offers.
-      </StateMessage>
-
-      <StateMessage v-else-if="createOfferRequestError" variant="error">
-        {{ createOfferRequestError.message }}
-      </StateMessage>
-
-      <StateMessage v-else-if="!duffelAccessToken && hasSubmitted && !hasErrors" variant="error">
-        Add VITE_API_FLIGHT_SEARCH to your environment to search live offers.
-      </StateMessage>
-
-      <StateMessage v-else-if="isSuccess && createdOfferRequest" variant="empty">
-        Offer request created. Results wiring comes next.
-      </StateMessage>
     </form>
   </Card>
 </template>

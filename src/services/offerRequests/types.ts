@@ -110,7 +110,7 @@ type TDuffelAirport = {
   iata_code: string
   iata_city_code?: string
   city_name?: string
-  city?: TDuffelCity
+  city?: TDuffelCity | null
 }
 
 type TDuffelCity = {
@@ -133,7 +133,7 @@ type TDuffelPlace = {
   iata_code?: string
   iata_city_code?: string
   city_name?: string
-  city?: TDuffelCity
+  city?: TDuffelCity | null
   airports?: TDuffelAirport[]
 }
 
@@ -149,9 +149,22 @@ type TDuffelAircraft = {
   iata_code?: string
 }
 
+type TDuffelBaggage = {
+  quantity: number
+  type: 'checked' | 'carry_on' | string
+}
+
+type TDuffelSegmentPassenger = {
+  passenger_id: string
+  cabin_class?: TDuffelCabinClass
+  cabin_class_marketing_name?: string
+  fare_basis_code?: string
+  baggages?: TDuffelBaggage[]
+}
+
 type TDuffelSegment = {
   id: string
-  aircraft?: TDuffelAircraft
+  aircraft?: TDuffelAircraft | null
   arriving_at: string
   departing_at: string
   destination: TDuffelPlace
@@ -163,6 +176,7 @@ type TDuffelSegment = {
   duration?: string
   distance?: string
   stops?: TDuffelPlace[]
+  passengers?: TDuffelSegmentPassenger[]
 }
 
 type TDuffelOfferSlice = {
@@ -170,6 +184,7 @@ type TDuffelOfferSlice = {
   origin: TDuffelPlace
   destination: TDuffelPlace
   departure_date?: string
+  fare_brand_name?: string
   segments?: TDuffelSegment[]
   duration?: string
 }
@@ -205,7 +220,7 @@ type TDuffelOffer = {
   passengers?: TDuffelOfferPassenger[]
   owner?: TDuffelCarrier
   payment_requirements?: TDuffelPaymentRequirements
-  available_services?: unknown[]
+  available_services?: unknown[] | null
   supported_passenger_identity_document_types?: string[]
   total_emissions_kg?: string
   conditions?: unknown
@@ -245,6 +260,7 @@ export type {
   TDuffelAircraft,
   TDuffelAirport,
   TDuffelApiResponse,
+  TDuffelBaggage,
   TDuffelCabinClass,
   TDuffelCarrier,
   TDuffelCity,
@@ -273,6 +289,7 @@ export type {
   TDuffelPrivateFare,
   TDuffelPrivateFares,
   TDuffelSegment,
+  TDuffelSegmentPassenger,
   TDuffelTimeWindow,
   TDuffelView,
 }
