@@ -18,7 +18,9 @@ const toSearchValues = (value: unknown): TSearchFormValues | null => {
 
   return {
     origin: typeof search.origin === 'string' ? search.origin : '',
+    originLabel: typeof search.originLabel === 'string' ? search.originLabel : '',
     destination: typeof search.destination === 'string' ? search.destination : '',
+    destinationLabel: typeof search.destinationLabel === 'string' ? search.destinationLabel : '',
     departureDate: typeof search.departureDate === 'string' ? search.departureDate : '',
     returnDate: typeof search.returnDate === 'string' ? search.returnDate : '',
     passengers: typeof search.passengers === 'number' ? search.passengers : '',
@@ -43,7 +45,9 @@ const readStoredSearch = () => {
 const normalizeStoredSearch = (values: TSearchFormValues): TSearchFormValues => ({
   ...values,
   origin: values.origin.trim().toUpperCase(),
+  originLabel: values.originLabel || values.origin.trim().toUpperCase(),
   destination: values.destination.trim().toUpperCase(),
+  destinationLabel: values.destinationLabel || values.destination.trim().toUpperCase(),
 })
 
 export const useSearchStore = defineStore('search', {

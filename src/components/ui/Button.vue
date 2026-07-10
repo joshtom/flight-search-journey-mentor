@@ -25,7 +25,7 @@ const buttonClass = computed(() => uiClasses.button[props.variant])
 </script>
 
 <template>
-  <button :class="buttonClass" :type="type">
+  <button :class="buttonClass" :type="type" v-bind="$attrs">
     <slot />
   </button>
 </template>

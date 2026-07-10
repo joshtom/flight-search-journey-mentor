@@ -10,7 +10,7 @@ import { mapDuffelOffersToFlightOffers } from '@/services/offerRequests/offerMap
 import { useSearchStore } from '@/stores/searchStore'
 import { uiClasses } from '@/styles/ui.classes'
 import type { TFlightFilters, TSearchFormValues } from '@/types/flight'
-import { getSearchValuesFromQueryParams } from '@/utils/searchQueryParams'
+import { getSearchValuesFromQueryParams, updateSearchQueryParams } from '@/utils/searchQueryParams'
 
 defineOptions({
   name: 'MainView',
@@ -67,6 +67,7 @@ const resultErrorMessage = computed(() => {
 const handleSearch = async (values: TSearchFormValues) => {
   hasSearched.value = true
   currentSearchValues.value = values
+  updateSearchQueryParams(values)
 
   if (!duffelAccessToken) {
     return
@@ -78,6 +79,18 @@ const handleSearch = async (values: TSearchFormValues) => {
   } catch {
     return
   }
+}
+
+const handleDepartureDateSelect = (departureDate: string) => {
+  if (!currentSearchValues.value) {
+    return
+  }
+
+  void handleSearch({
+    ...currentSearchValues.value,
+    departureDate,
+    returnDate: '',
+  })
 }
 
 onMounted(() => {
@@ -98,7 +111,12 @@ onMounted(() => {
       />
 
       <section class="mx-auto w-full max-w-6xl" aria-label="Flight search">
-        <SearchForm :is-searching="isPending" @search="handleSearch" />
+        <SearchForm
+          :is-searching="isPending"
+          :search-values="currentSearchValues"
+          :suggestion-token="duffelAccessToken"
+          @search="handleSearch"
+        />
       </section>
 
       <section class="mx-auto w-full max-w-6xl" aria-label="Flight filters">
@@ -107,11 +125,13 @@ onMounted(() => {
 
       <ResultsPanel
         :error-message="resultErrorMessage"
+        :departure-date="currentSearchValues?.departureDate"
         :has-searched="hasSearched"
         :is-loading="isPending"
         :filters="filters"
         :offers="flightOffers"
         :route-label="routeLabel"
+        @select-departure-date="handleDepartureDateSelect"
       />
     </main>
   </div>

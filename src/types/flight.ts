@@ -17,7 +17,9 @@ type TFlightFilters = {
 
 type TSearchFormValues = {
   origin: string
+  originLabel: string
   destination: string
+  destinationLabel: string
   departureDate: string
   returnDate: string
   passengers: number | ''
@@ -64,7 +66,7 @@ type TFlightOffer = {
 type TDateWindowDay = {
   label: string
   date: string
-  price: string
+  value: string
   active?: boolean
 }
 

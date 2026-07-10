@@ -1,24 +1,29 @@
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 
+import PlaceAutocomplete from '@/components/search/PlaceAutocomplete.vue'
 import Button from '@/components/ui/Button.vue'
 import Card from '@/components/ui/Card.vue'
 import Input from '@/components/ui/Input.vue'
 import Select from '@/components/ui/Select.vue'
 import { useSearchStore } from '@/stores/searchStore'
 import type { TCabinClass, TSearchFormErrors, TSearchFormValues } from '@/types/flight'
-import { getSearchValuesFromQueryParams } from '@/utils/searchQueryParams'
+import { getSearchValuesFromQueryParams, updateSearchQueryParams } from '@/utils/searchQueryParams'
 
 defineOptions({
   name: 'SearchForm',
 })
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     isSearching?: boolean
+    searchValues?: TSearchFormValues | null
+    suggestionToken: string
   }>(),
   {
     isSearching: false,
+    searchValues: null,
+    suggestionToken: '',
   },
 )
 
@@ -34,18 +39,11 @@ const cabinOptions: { label: string; value: TCabinClass | '' }[] = [
   { label: 'First', value: 'first' },
 ]
 
-const searchQueryParams: { key: keyof TSearchFormValues; param: string }[] = [
-  { key: 'origin', param: 'from' },
-  { key: 'destination', param: 'to' },
-  { key: 'departureDate', param: 'departure' },
-  { key: 'returnDate', param: 'return' },
-  { key: 'passengers', param: 'passengers' },
-  { key: 'cabin', param: 'cabin' },
-]
-
 const emptySearchValues: TSearchFormValues = {
   origin: '',
+  originLabel: '',
   destination: '',
+  destinationLabel: '',
   departureDate: '',
   returnDate: '',
   passengers: '',
@@ -53,7 +51,7 @@ const emptySearchValues: TSearchFormValues = {
 }
 
 const searchStore = useSearchStore()
-const initialSearchValues = getSearchValuesFromQueryParams() ?? searchStore.lastSearch
+const initialSearchValues = props.searchValues ?? getSearchValuesFromQueryParams() ?? searchStore.lastSearch
 
 const values = reactive<TSearchFormValues>({
   ...emptySearchValues,
@@ -106,27 +104,30 @@ const visibleErrors = computed<TSearchFormErrors>(() =>
 
 const hasErrors = computed(() => Object.keys(validationErrors.value).length > 0)
 
-const updateQueryParams = () => {
-  const url = new URL(window.location.href)
-
-  searchQueryParams.forEach(({ key, param }) => {
-    const value = values[key]
-
-    if (value === '' || value === undefined) {
-      url.searchParams.delete(param)
-      return
-    }
-
-    url.searchParams.set(param, String(value))
-  })
-
-  window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`)
-}
-
 const normalizeSearchValues = (): TSearchFormValues => ({
   ...values,
   passengers: Number(values.passengers),
 })
+
+const applySearchValues = (searchValues: TSearchFormValues) => {
+  values.origin = searchValues.origin
+  values.originLabel = searchValues.originLabel || searchValues.origin
+  values.destination = searchValues.destination
+  values.destinationLabel = searchValues.destinationLabel || searchValues.destination
+  values.departureDate = searchValues.departureDate
+  values.returnDate = searchValues.returnDate
+  values.passengers = searchValues.passengers
+  values.cabin = searchValues.cabin
+}
+
+watch(
+  () => props.searchValues,
+  (searchValues) => {
+    if (searchValues) {
+      applySearchValues(searchValues)
+    }
+  },
+)
 
 const submitSearch = () => {
   hasSubmitted.value = true
@@ -137,7 +138,7 @@ const submitSearch = () => {
 
   const searchValues = normalizeSearchValues()
 
-  updateQueryParams()
+  updateSearchQueryParams(searchValues)
   emit('search', searchValues)
 }
 </script>
@@ -154,18 +155,22 @@ const submitSearch = () => {
       <div
         class="grid gap-3 md:grid-cols-2 lg:grid-cols-[minmax(112px,1fr)_minmax(112px,1fr)_minmax(136px,0.9fr)_minmax(136px,0.9fr)_minmax(104px,0.7fr)_minmax(148px,0.9fr)_auto] lg:items-start"
       >
-        <Input
+        <PlaceAutocomplete
           v-model="values.origin"
+          v-model:display-value="values.originLabel"
           :error="visibleErrors.origin"
           label="From"
-          placeholder="Origin"
+          placeholder="Search origin"
+          :token="suggestionToken"
         />
 
-        <Input
+        <PlaceAutocomplete
           v-model="values.destination"
+          v-model:display-value="values.destinationLabel"
           :error="visibleErrors.destination"
           label="To"
-          placeholder="Destination"
+          placeholder="Search destination"
+          :token="suggestionToken"
         />
 
         <Input

@@ -7,7 +7,14 @@ defineOptions({
 })
 
 defineProps<{
+  canShowPrevious: boolean
   days: TDateWindowDay[]
+}>()
+
+defineEmits<{
+  next: []
+  previous: []
+  select: [date: string]
 }>()
 </script>
 
@@ -19,8 +26,15 @@ defineProps<{
         <p class="text-xs text-stone-500">Shift the departure date window.</p>
       </div>
       <div class="flex gap-2">
-        <Button variant="ghost" aria-label="Previous dates">Prev</Button>
-        <Button variant="ghost" aria-label="Next dates">Next</Button>
+        <Button
+          variant="ghost"
+          aria-label="Previous dates"
+          :disabled="!canShowPrevious"
+          @click="$emit('previous')"
+        >
+          Prev
+        </Button>
+        <Button variant="ghost" aria-label="Next dates" @click="$emit('next')">Next</Button>
       </div>
     </div>
 
@@ -28,17 +42,17 @@ defineProps<{
       <button
         v-for="day in days"
         :key="day.date"
-        class="rounded-2xl border p-3 text-left transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 focus-visible:ring-offset-2"
+        class="cursor-pointer rounded-2xl border p-3 text-left transition duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 focus-visible:ring-offset-2"
         :class="
           day.active
             ? 'border-stone-950 bg-stone-950 text-white shadow-sm'
             : 'border-stone-200 bg-stone-50 text-stone-700 hover:border-stone-300 hover:bg-white'
         "
         type="button"
+        @click="$emit('select', day.value)"
       >
         <span class="block text-xs font-semibold uppercase tracking-[0.14em]">{{ day.label }}</span>
         <span class="mt-1 block text-sm">{{ day.date }}</span>
-        <span class="mt-2 block text-sm font-semibold">{{ day.price }}</span>
       </button>
     </div>
   </div>

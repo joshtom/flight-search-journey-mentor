@@ -7,6 +7,17 @@ const isCabinClass = (value: string | null): value is TCabinClass =>
 
 const getTrimmedParam = (params: URLSearchParams, key: string) => params.get(key)?.trim() ?? ''
 
+const searchQueryParams: { key: keyof TSearchFormValues; param: string }[] = [
+  { key: 'origin', param: 'from' },
+  { key: 'originLabel', param: 'fromLabel' },
+  { key: 'destination', param: 'to' },
+  { key: 'destinationLabel', param: 'toLabel' },
+  { key: 'departureDate', param: 'departure' },
+  { key: 'returnDate', param: 'return' },
+  { key: 'passengers', param: 'passengers' },
+  { key: 'cabin', param: 'cabin' },
+]
+
 export const getSearchValuesFromQueryParams = (
   params = new URLSearchParams(window.location.search),
 ): TSearchFormValues | null => {
@@ -35,10 +46,29 @@ export const getSearchValuesFromQueryParams = (
 
   return {
     origin,
+    originLabel: getTrimmedParam(params, 'fromLabel') || origin,
     destination,
+    destinationLabel: getTrimmedParam(params, 'toLabel') || destination,
     departureDate,
     returnDate,
     passengers,
     cabin,
   }
+}
+
+export const updateSearchQueryParams = (values: TSearchFormValues) => {
+  const url = new URL(window.location.href)
+
+  searchQueryParams.forEach(({ key, param }) => {
+    const value = values[key]
+
+    if (value === '' || value === undefined) {
+      url.searchParams.delete(param)
+      return
+    }
+
+    url.searchParams.set(param, String(value))
+  })
+
+  window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`)
 }

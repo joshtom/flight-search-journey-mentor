@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import DateWindow from '@/components/results/DateWindow.vue'
 import OfferDetailModal from '@/components/results/OfferDetailModal.vue'
@@ -20,25 +20,118 @@ const props = withDefaults(
     isLoading?: boolean
     errorMessage?: string | null
     hasSearched?: boolean
+    departureDate?: string
     routeLabel?: string
   }>(),
   {
     isLoading: false,
     errorMessage: null,
     hasSearched: false,
+    departureDate: '',
     routeLabel: '',
   },
 )
 
+const emit = defineEmits<{
+  selectDepartureDate: [date: string]
+}>()
+
 const activeSort = ref<TSortOption>('price')
+const dateWindowOffset = ref(0)
 const selectedOfferId = ref<string | null>(null)
 
-const dateWindowDays: TDateWindowDay[] = [
-  { label: 'Wed', date: 'Aug 12', price: '$815' },
-  { label: 'Thu', date: 'Aug 13', price: '$768' },
-  { label: 'Fri', date: 'Aug 14', price: '$742', active: true },
-  { label: 'Sat', date: 'Aug 15', price: '$790' },
-]
+const dateFormatter = new Intl.DateTimeFormat('en', {
+  month: 'short',
+  day: 'numeric',
+})
+
+const weekdayFormatter = new Intl.DateTimeFormat('en', {
+  weekday: 'short',
+})
+
+const toIsoDate = (date: Date) => {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+
+  return `${year}-${month}-${day}`
+}
+
+const getDateFromIsoDate = (value: string) => {
+  const [year, month, day] = value.split('-').map(Number)
+
+  if (!year || !month || !day) {
+    return null
+  }
+
+  return new Date(year, month - 1, day)
+}
+
+const getToday = () => {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  return today
+}
+
+const getWindowStart = () => {
+  if (!props.departureDate) {
+    return null
+  }
+
+  const activeDate = getDateFromIsoDate(props.departureDate)
+
+  if (!activeDate) {
+    return null
+  }
+
+  const windowStart = new Date(activeDate)
+  windowStart.setDate(activeDate.getDate() + dateWindowOffset.value)
+
+  const today = getToday()
+
+  if (windowStart < today) {
+    windowStart.setTime(today.getTime())
+  }
+
+  return windowStart
+}
+
+const dateWindowStart = computed(() => getWindowStart())
+
+const canShowPreviousDates = computed(() => {
+  const windowStart = dateWindowStart.value
+
+  return Boolean(windowStart && windowStart > getToday())
+})
+
+const dateWindowDays = computed<TDateWindowDay[]>(() => {
+  const windowStart = dateWindowStart.value
+
+  if (!windowStart) {
+    return []
+  }
+
+  return Array.from({ length: 4 }, (_, index) => {
+    const date = new Date(windowStart)
+    date.setDate(windowStart.getDate() + index)
+    const value = toIsoDate(date)
+
+    return {
+      label: weekdayFormatter.format(date),
+      date: dateFormatter.format(date),
+      value,
+      active: value === props.departureDate,
+    }
+  })
+})
+
+watch(
+  () => props.departureDate,
+  () => {
+    dateWindowOffset.value = 0
+  },
+)
 
 const getPriceValue = (offer: TFlightOffer) => Number(offer.price.replace(/[^\d.]/g, ''))
 
@@ -165,12 +258,50 @@ const openOfferDetails = (offerId: string) => {
 const closeOfferDetails = () => {
   selectedOfferId.value = null
 }
+
+const selectDepartureDate = (date: string) => {
+  if (date === props.departureDate) {
+    return
+  }
+
+  emit('selectDepartureDate', date)
+}
+
+const shiftDateWindow = (direction: 'next' | 'previous') => {
+  const activeDate = getDateFromIsoDate(props.departureDate)
+
+  if (!activeDate) {
+    return
+  }
+
+  const nextOffset = dateWindowOffset.value + (direction === 'next' ? 4 : -4)
+  const nextWindowStart = new Date(activeDate)
+  nextWindowStart.setDate(activeDate.getDate() + nextOffset)
+
+  if (nextWindowStart < getToday()) {
+    const today = getToday()
+    const millisecondsPerDay = 24 * 60 * 60 * 1000
+    dateWindowOffset.value = Math.ceil(
+      (today.getTime() - activeDate.getTime()) / millisecondsPerDay,
+    )
+    return
+  }
+
+  dateWindowOffset.value = nextOffset
+}
 </script>
 
 <template>
   <section aria-label="Flight results">
     <div class="flex flex-col gap-4">
-      <DateWindow v-if="hasSearched && offers.length" :days="dateWindowDays" />
+      <DateWindow
+        v-if="hasSearched && offers.length && dateWindowDays.length"
+        :days="dateWindowDays"
+        :can-show-previous="canShowPreviousDates"
+        @next="shiftDateWindow('next')"
+        @previous="shiftDateWindow('previous')"
+        @select="selectDepartureDate"
+      />
 
       <Card>
         <div class="space-y-5 p-4 sm:p-6">
