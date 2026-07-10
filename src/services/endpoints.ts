@@ -3,6 +3,8 @@ const offerRequest = {
   offerRequestById: (id: string) => `/air/offer_requests/${id}`,
 }
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
+const configuredBaseUrl = import.meta.env.VITE_API_BASE_URL
+
+const BASE_URL = configuredBaseUrl?.includes('api.duffel.com') ? '/api' : configuredBaseUrl || '/api'
 
 export { offerRequest, BASE_URL }
