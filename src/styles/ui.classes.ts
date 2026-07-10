@@ -8,7 +8,7 @@ const interactiveMotion = 'transition duration-200 ease-out'
 export const uiClasses = {
   page: {
     shell:
-      'min-h-screen bg-[radial-gradient(circle_at_top_left,#fff7ed_0,#fafaf9_34%,#f5f5f4_100%)] px-4 py-6 text-stone-950 sm:px-6 lg:px-8',
+      'min-h-screen px-4 py-6 text-stone-950 sm:px-6 lg:px-8',
     container: 'mx-auto flex w-full max-w-6xl flex-col gap-6 sm:gap-8',
     eyebrow: 'text-xs font-semibold uppercase tracking-[0.18em] text-stone-500',
     title: 'max-w-3xl text-3xl font-semibold tracking-normal text-stone-950 sm:text-5xl',
@@ -91,7 +91,7 @@ export const uiClasses = {
   resultCard: {
     base: [
       'rounded-3xl border border-stone-200 bg-white p-4 shadow-sm',
-      'hover:-translate-y-0.5 hover:border-stone-300 hover:shadow-[0_18px_48px_rgba(28,25,23,0.10)]',
+      'hover:-translate-y-0.5 hover:border-stone-300',
       interactiveMotion,
     ].join(' '),
     header: 'flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between',
