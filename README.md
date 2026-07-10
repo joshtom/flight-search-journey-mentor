@@ -63,7 +63,7 @@ Defaults to `/api` so browser requests go through the Vite dev proxy.
 
 ## CORS Approach
 
-Duffel does not allow direct browser calls. To keep this assessment frontend-focused, the app uses Vite's dev proxy:
+Duffel does not allow direct browser calls. To keep this assessment frontend-focused, the app uses Vite's dev proxy locally:
 
 ```ts
 server: {
@@ -78,6 +78,8 @@ server: {
 ```
 
 The client calls `/api/...`, and Vite forwards the request to Duffel during local development.
+
+For Vercel deployments, `vercel.json` applies the same idea with a rewrite from `/api/:path*` to `https://api.duffel.com/:path*`.
 
 ## Implemented Requirements
 
