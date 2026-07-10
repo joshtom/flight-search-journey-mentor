@@ -17,7 +17,6 @@ export const uiClasses = {
   },
   hero: {
     base: 'flex flex-col items-center justify-center gap-3 pt-6 sm:pt-10',
-    // eyebrow: 'text-xs font-semibold uppercase tracking-[0.18em] text-stone-500',
     title:
       'max-w-3xl text-3xl font-semibold tracking-normal text-stone-950 sm:text-5xl text-center',
     subtitle: 'max-w-2xl text-base leading-7 text-stone-600 sm:text-lg text-center',

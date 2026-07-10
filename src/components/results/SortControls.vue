@@ -23,7 +23,6 @@ const sortOptions: { label: string; value: TSortOption }[] = [
 
 <template>
   <div class="flex flex-col gap-2">
-    <!-- <p class="text-xs font-semibold uppercase tracking-[0.14em] text-stone-500">Sort by</p> -->
     <div class="flex flex-wrap gap-2">
       <FilterChip
         v-for="option in sortOptions"
