@@ -5,26 +5,44 @@ import Button from '@/components/ui/Button.vue'
 import Card from '@/components/ui/Card.vue'
 import Input from '@/components/ui/Input.vue'
 import Select from '@/components/ui/Select.vue'
+import { useSearchStore } from '@/stores/searchStore'
 import type { TCabinClass, TSearchFormErrors, TSearchFormValues } from '@/types/flight'
 
 defineOptions({
   name: 'SearchForm',
 })
 
-const cabinOptions: { label: string; value: TCabinClass }[] = [
+const cabinOptions: { label: string; value: TCabinClass | '' }[] = [
+  { label: 'Select cabin', value: '' },
   { label: 'Economy', value: 'economy' },
   { label: 'Premium economy', value: 'premium-economy' },
   { label: 'Business', value: 'business' },
   { label: 'First', value: 'first' },
 ]
 
-const values = reactive<TSearchFormValues>({
-  origin: 'Lagos',
-  destination: 'London',
-  departureDate: '2026-08-14',
+const searchQueryParams: { key: keyof TSearchFormValues; param: string }[] = [
+  { key: 'origin', param: 'from' },
+  { key: 'destination', param: 'to' },
+  { key: 'departureDate', param: 'departure' },
+  { key: 'returnDate', param: 'return' },
+  { key: 'passengers', param: 'passengers' },
+  { key: 'cabin', param: 'cabin' },
+]
+
+const emptySearchValues: TSearchFormValues = {
+  origin: '',
+  destination: '',
+  departureDate: '',
   returnDate: '',
-  passengers: 1,
-  cabin: 'economy',
+  passengers: '',
+  cabin: '',
+}
+
+const searchStore = useSearchStore()
+
+const values = reactive<TSearchFormValues>({
+  ...emptySearchValues,
+  ...searchStore.lastSearch,
 })
 
 const hasSubmitted = ref(false)
@@ -33,27 +51,35 @@ const validationErrors = computed<TSearchFormErrors>(() => {
   const errors: TSearchFormErrors = {}
 
   if (!values.origin.trim()) {
-    errors.origin = 'Enter an origin city or airport.'
+    errors.origin = 'Required'
   }
 
   if (!values.destination.trim()) {
-    errors.destination = 'Enter a destination city or airport.'
+    errors.destination = 'Required'
   }
 
-  if (values.origin.trim() && values.destination.trim() && values.origin === values.destination) {
+  if (
+    values.origin.trim() &&
+    values.destination.trim() &&
+    values.origin.trim().toLowerCase() === values.destination.trim().toLowerCase()
+  ) {
     errors.destination = 'Choose a different destination.'
   }
 
   if (!values.departureDate) {
-    errors.departureDate = 'Choose a departure date.'
+    errors.departureDate = 'Required'
   }
 
   if (values.returnDate && values.departureDate && values.returnDate < values.departureDate) {
     errors.returnDate = 'Return date must be after departure.'
   }
 
-  if (!values.passengers || values.passengers < 1) {
-    errors.passengers = 'Add at least one passenger.'
+  if (!values.passengers || Number(values.passengers) < 1) {
+    errors.passengers = 'Required'
+  }
+
+  if (!values.cabin) {
+    errors.cabin = 'Required'
   }
 
   return errors
@@ -65,8 +91,37 @@ const visibleErrors = computed<TSearchFormErrors>(() =>
 
 const hasErrors = computed(() => Object.keys(validationErrors.value).length > 0)
 
+const updateQueryParams = () => {
+  const url = new URL(window.location.href)
+
+  searchQueryParams.forEach(({ key, param }) => {
+    const value = values[key]
+
+    if (value === '' || value === undefined) {
+      url.searchParams.delete(param)
+      return
+    }
+
+    url.searchParams.set(param, String(value))
+  })
+
+  window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`)
+}
+
+const normalizeSearchValues = (): TSearchFormValues => ({
+  ...values,
+  passengers: Number(values.passengers),
+})
+
 const submitSearch = () => {
   hasSubmitted.value = true
+
+  if (hasErrors.value) {
+    return
+  }
+
+  searchStore.saveSearch(normalizeSearchValues())
+  updateQueryParams()
 }
 </script>
 
@@ -86,14 +141,14 @@ const submitSearch = () => {
           v-model="values.origin"
           :error="visibleErrors.origin"
           label="From"
-          placeholder="Lagos"
+          placeholder="Origin"
         />
 
         <Input
           v-model="values.destination"
           :error="visibleErrors.destination"
           label="To"
-          placeholder="London"
+          placeholder="Destination"
         />
 
         <Input
@@ -119,7 +174,12 @@ const submitSearch = () => {
           type="number"
         />
 
-        <Select v-model="values.cabin" label="Cabin" :options="cabinOptions" />
+        <Select
+          v-model="values.cabin"
+          :error="visibleErrors.cabin"
+          label="Cabin"
+          :options="cabinOptions"
+        />
 
         <div class="flex lg:pt-6">
           <Button

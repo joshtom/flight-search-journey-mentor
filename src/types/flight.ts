@@ -9,8 +9,8 @@ type TSearchFormValues = {
   destination: string
   departureDate: string
   returnDate: string
-  passengers: number
-  cabin: TCabinClass
+  passengers: number | ''
+  cabin: TCabinClass | ''
 }
 
 type TSearchFormErrors = Partial<Record<keyof TSearchFormValues, string>>

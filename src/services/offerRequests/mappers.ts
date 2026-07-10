@@ -40,7 +40,7 @@ export const mapSearchFormToOfferRequestPayload = (
 ): TDuffelCreateOfferRequestPayload => ({
   data: {
     slices: buildSlices(values),
-    passengers: Array.from({ length: values.passengers }, () => ({ type: 'adult' })),
-    cabin_class: cabinClassMap[values.cabin],
+    passengers: Array.from({ length: Number(values.passengers) }, () => ({ type: 'adult' })),
+    ...(values.cabin ? { cabin_class: cabinClassMap[values.cabin] } : {}),
   },
 })
