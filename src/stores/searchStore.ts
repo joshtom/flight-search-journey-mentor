@@ -40,13 +40,19 @@ const readStoredSearch = () => {
   }
 }
 
+const normalizeStoredSearch = (values: TSearchFormValues): TSearchFormValues => ({
+  ...values,
+  origin: values.origin.trim().toUpperCase(),
+  destination: values.destination.trim().toUpperCase(),
+})
+
 export const useSearchStore = defineStore('search', {
   state: () => ({
     lastSearch: readStoredSearch(),
   }),
   actions: {
-    saveSearch(values: TSearchFormValues) {
-      this.lastSearch = { ...values }
+    saveSuccessfulSearch(values: TSearchFormValues) {
+      this.lastSearch = normalizeStoredSearch(values)
       localStorage.setItem(SEARCH_STORAGE_KEY, JSON.stringify(this.lastSearch))
     },
   },

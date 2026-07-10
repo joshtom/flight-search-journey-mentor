@@ -2,7 +2,18 @@ type TCabinClass = 'economy' | 'premium-economy' | 'business' | 'first'
 
 type TSortOption = 'price' | 'duration' | 'departure'
 
-type TStopFilter = 'nonstop' | 'one-stop' | 'two-plus'
+type TStopFilter = 'any' | 'nonstop' | 'one-stop' | 'two-plus'
+
+type TDepartureWindow = 'any' | 'evening'
+
+type TFlightFilters = {
+  stop: TStopFilter
+  minPrice: number | ''
+  maxPrice: number | ''
+  checkedBagOnly: boolean
+  departureWindow: TDepartureWindow
+  cabin: TCabinClass | 'any'
+}
 
 type TSearchFormValues = {
   origin: string
@@ -60,6 +71,8 @@ type TDateWindowDay = {
 export type {
   TCabinClass,
   TDateWindowDay,
+  TDepartureWindow,
+  TFlightFilters,
   TFlightOffer,
   TFlightSegment,
   TLayover,

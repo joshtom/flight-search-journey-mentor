@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 import FlightFilters from './filters/FlightFilters.vue'
 import ResultsPanel from './results/ResultsPanel.vue'
@@ -7,17 +7,28 @@ import SearchForm from './search/SearchForm.vue'
 import Hero from './ui/Hero.vue'
 import { useFlightSearch } from '@/composables/offerRequests/useFlightSearch'
 import { mapDuffelOffersToFlightOffers } from '@/services/offerRequests/offerMappers'
+import { useSearchStore } from '@/stores/searchStore'
 import { uiClasses } from '@/styles/ui.classes'
-import type { TSearchFormValues, TStopFilter } from '@/types/flight'
+import type { TFlightFilters, TSearchFormValues } from '@/types/flight'
+import { getSearchValuesFromQueryParams } from '@/utils/searchQueryParams'
 
 defineOptions({
   name: 'MainView',
 })
 
-const activeStop = ref<TStopFilter>('nonstop')
+const filters = ref<TFlightFilters>({
+  stop: 'any',
+  minPrice: '',
+  maxPrice: '',
+  checkedBagOnly: false,
+  departureWindow: 'any',
+  cabin: 'any',
+})
 const hasSearched = ref(false)
-const routeLabel = ref('')
 const duffelAccessToken = import.meta.env.VITE_API_FLIGHT_SEARCH ?? ''
+const searchStore = useSearchStore()
+const initialSearchValues = getSearchValuesFromQueryParams() ?? searchStore.lastSearch
+const currentSearchValues = ref<TSearchFormValues | null>(initialSearchValues)
 const {
   data: offerRequestResponse,
   error: offerRequestError,
@@ -28,6 +39,18 @@ const {
 const flightOffers = computed(() =>
   mapDuffelOffersToFlightOffers(offerRequestResponse.value?.data.offers ?? []),
 )
+
+const routeLabel = computed(() => {
+  const search = currentSearchValues.value
+
+  if (!search) {
+    return ''
+  }
+
+  return `${search.origin.toString().toUpperCase()} to ${search.destination
+    .toString()
+    .toUpperCase()}`
+})
 
 const resultErrorMessage = computed(() => {
   if (!hasSearched.value) {
@@ -43,9 +66,7 @@ const resultErrorMessage = computed(() => {
 
 const handleSearch = async (values: TSearchFormValues) => {
   hasSearched.value = true
-  routeLabel.value = `${values.origin.toString().toUpperCase()} to ${values.destination
-    .toString()
-    .toUpperCase()}`
+  currentSearchValues.value = values
 
   if (!duffelAccessToken) {
     return
@@ -53,10 +74,19 @@ const handleSearch = async (values: TSearchFormValues) => {
 
   try {
     await searchFlights(values)
+    searchStore.saveSuccessfulSearch(values)
   } catch {
     return
   }
 }
+
+onMounted(() => {
+  if (!initialSearchValues) {
+    return
+  }
+
+  void handleSearch(initialSearchValues)
+})
 </script>
 
 <template>
@@ -72,13 +102,14 @@ const handleSearch = async (values: TSearchFormValues) => {
       </section>
 
       <section class="mx-auto w-full max-w-6xl" aria-label="Flight filters">
-        <FlightFilters :active-stop="activeStop" />
+        <FlightFilters v-model:filters="filters" />
       </section>
 
       <ResultsPanel
         :error-message="resultErrorMessage"
         :has-searched="hasSearched"
         :is-loading="isPending"
+        :filters="filters"
         :offers="flightOffers"
         :route-label="routeLabel"
       />

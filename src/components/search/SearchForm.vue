@@ -7,6 +7,7 @@ import Input from '@/components/ui/Input.vue'
 import Select from '@/components/ui/Select.vue'
 import { useSearchStore } from '@/stores/searchStore'
 import type { TCabinClass, TSearchFormErrors, TSearchFormValues } from '@/types/flight'
+import { getSearchValuesFromQueryParams } from '@/utils/searchQueryParams'
 
 defineOptions({
   name: 'SearchForm',
@@ -52,10 +53,11 @@ const emptySearchValues: TSearchFormValues = {
 }
 
 const searchStore = useSearchStore()
+const initialSearchValues = getSearchValuesFromQueryParams() ?? searchStore.lastSearch
 
 const values = reactive<TSearchFormValues>({
   ...emptySearchValues,
-  ...searchStore.lastSearch,
+  ...initialSearchValues,
 })
 
 const hasSubmitted = ref(false)
@@ -135,7 +137,6 @@ const submitSearch = () => {
 
   const searchValues = normalizeSearchValues()
 
-  searchStore.saveSearch(searchValues)
   updateQueryParams()
   emit('search', searchValues)
 }

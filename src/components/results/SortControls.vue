@@ -10,6 +10,10 @@ defineProps<{
   activeSort: TSortOption
 }>()
 
+defineEmits<{
+  'update:activeSort': [sort: TSortOption]
+}>()
+
 const sortOptions: { label: string; value: TSortOption }[] = [
   { label: 'Price', value: 'price' },
   { label: 'Duration', value: 'duration' },
@@ -25,6 +29,7 @@ const sortOptions: { label: string; value: TSortOption }[] = [
         v-for="option in sortOptions"
         :key="option.value"
         :active="activeSort === option.value"
+        @click="$emit('update:activeSort', option.value)"
       >
         {{ option.label }}
       </FilterChip>

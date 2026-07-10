@@ -7,7 +7,7 @@ import ResultCard from '@/components/results/ResultCard.vue'
 import SortControls from '@/components/results/SortControls.vue'
 import Card from '@/components/ui/Card.vue'
 import StateMessage from '@/components/ui/StateMessage.vue'
-import type { TDateWindowDay, TFlightOffer, TSortOption } from '@/types/flight'
+import type { TDateWindowDay, TFlightFilters, TFlightOffer, TSortOption } from '@/types/flight'
 
 defineOptions({
   name: 'ResultsPanel',
@@ -16,6 +16,7 @@ defineOptions({
 const props = withDefaults(
   defineProps<{
     offers: TFlightOffer[]
+    filters: TFlightFilters
     isLoading?: boolean
     errorMessage?: string | null
     hasSearched?: boolean
@@ -48,8 +49,83 @@ const getDurationValue = (offer: TFlightOffer) => {
   return Number(hours) * 60 + Number(minutes)
 }
 
+const getDepartureHour = (offer: TFlightOffer) => {
+  const [hour = '0'] = offer.departureTime.split(':')
+
+  return Number(hour)
+}
+
+const matchesStopFilter = (offer: TFlightOffer) => {
+  if (props.filters.stop === 'nonstop') {
+    return offer.stopCount === 0
+  }
+
+  if (props.filters.stop === 'one-stop') {
+    return offer.stopCount === 1
+  }
+
+  if (props.filters.stop === 'two-plus') {
+    return offer.stopCount >= 2
+  }
+
+  return true
+}
+
+const matchesCabinFilter = (offer: TFlightOffer) => {
+  if (props.filters.cabin === 'any') {
+    return true
+  }
+
+  const offerCabin = offer.cabin.toLowerCase()
+  const filterCabin = props.filters.cabin.replace('-', ' ')
+
+  return offerCabin.includes(filterCabin)
+}
+
+const matchesPriceFilter = (offer: TFlightOffer) => {
+  const price = getPriceValue(offer)
+  const minPrice = props.filters.minPrice === '' ? null : Number(props.filters.minPrice)
+  const maxPrice = props.filters.maxPrice === '' ? null : Number(props.filters.maxPrice)
+
+  if (minPrice !== null && price < minPrice) {
+    return false
+  }
+
+  if (maxPrice !== null && price > maxPrice) {
+    return false
+  }
+
+  return true
+}
+
+const filteredOffers = computed(() =>
+  props.offers.filter((offer) => {
+    if (!matchesStopFilter(offer)) {
+      return false
+    }
+
+    if (!matchesPriceFilter(offer)) {
+      return false
+    }
+
+    if (props.filters.checkedBagOnly && !offer.baggage.toLowerCase().includes('checked')) {
+      return false
+    }
+
+    if (props.filters.departureWindow === 'evening') {
+      const departureHour = getDepartureHour(offer)
+
+      if (!Number.isFinite(departureHour) || departureHour < 18) {
+        return false
+      }
+    }
+
+    return matchesCabinFilter(offer)
+  }),
+)
+
 const sortedOffers = computed(() => {
-  const offers = [...props.offers]
+  const offers = [...filteredOffers.value]
 
   if (activeSort.value === 'duration') {
     return offers.sort((first, second) => getDurationValue(first) - getDurationValue(second))
@@ -79,7 +155,7 @@ const resultSummary = computed(() => {
     return 'Unable to load offers.'
   }
 
-  return `${props.offers.length} offers${props.routeLabel ? ` for ${props.routeLabel}` : ''}`
+  return `${filteredOffers.value.length} offers${props.routeLabel ? ` for ${props.routeLabel}` : ''}`
 })
 
 const openOfferDetails = (offerId: string) => {
@@ -105,7 +181,7 @@ const closeOfferDetails = () => {
                 {{ resultSummary }}
               </p>
             </div>
-            <SortControls v-if="sortedOffers.length" :active-sort="activeSort" />
+            <SortControls v-if="sortedOffers.length" v-model:active-sort="activeSort" />
           </div>
 
           <StateMessage v-if="isLoading" variant="loading">
@@ -121,7 +197,7 @@ const closeOfferDetails = () => {
           </StateMessage>
 
           <StateMessage v-else-if="!sortedOffers.length" variant="empty">
-            No offers matched this search. Try another route, date, or cabin.
+            No offers matched this search. Try another filter, route, date, or cabin.
           </StateMessage>
 
           <div v-else class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
